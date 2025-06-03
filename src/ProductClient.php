@@ -56,7 +56,7 @@ class ProductClient
         try {
             $response = $this->httpClient->get("/api/products/{$id}");
             $data = json_decode((string) $response->getBody(), true);
-            return ProductDTO::fromArray($data);
+            return ProductDTO::fromArray($data['data']);
         } catch (\Exception $e) {
             throw new ProductException("Failed to get product: {$e->getMessage()}", $e->getCode(), $e);
         }
@@ -78,7 +78,7 @@ class ProductClient
                 'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
-            return ProductDTO::fromArray($data);
+            return ProductDTO::fromArray($data['data']);
         } catch (\Exception $e) {
             throw new ProductException("Failed to create product: {$e->getMessage()}", $e->getCode(), $e);
         }
@@ -100,7 +100,7 @@ class ProductClient
                 'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
-            return ProductDTO::fromArray($data);
+            return ProductDTO::fromArray($data['data']);
         } catch (\Exception $e) {
             throw new ProductException("Failed to update product: {$e->getMessage()}", $e->getCode(), $e);
         }
@@ -147,7 +147,7 @@ class ProductClient
         try {
             $response = $this->httpClient->get("/api/product-types/{$id}");
             $data = json_decode((string) $response->getBody(), true);
-            return ProductTypeDTO::fromArray($data);
+            return ProductTypeDTO::fromArray($data['data']);
         } catch (\Exception $e) {
             throw new ProductException("Failed to get product type: {$e->getMessage()}", $e->getCode(), $e);
         }
@@ -166,7 +166,7 @@ class ProductClient
                 'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
-            return ProductTypeDTO::fromArray($data);
+            return ProductTypeDTO::fromArray($data['data']);
         } catch (\Exception $e) {
             throw new ProductException("Failed to create product type: {$e->getMessage()}", $e->getCode(), $e);
         }
@@ -185,7 +185,7 @@ class ProductClient
                 'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
-            return ProductTypeDTO::fromArray($data);
+            return ProductTypeDTO::fromArray($data['data']);
         } catch (\Exception $e) {
             throw new ProductException("Failed to update product type: {$e->getMessage()}", $e->getCode(), $e);
         }
@@ -232,7 +232,7 @@ class ProductClient
         try {
             $response = $this->httpClient->get("/api/products/{$productId}/variants/{$variantId}");
             $data = json_decode((string) $response->getBody(), true);
-            return ProductVariantDTO::fromArray($data);
+            return ProductVariantDTO::fromArray($data['data']);
         } catch (\Exception $e) {
             throw new ProductException("Failed to get product variant: {$e->getMessage()}", $e->getCode(), $e);
         }
@@ -256,7 +256,7 @@ class ProductClient
                 'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
-            return ProductVariantDTO::fromArray($data);
+            return ProductVariantDTO::fromArray($data['data']);
         } catch (\Exception $e) {
             throw new ProductException("Failed to create product variant: {$e->getMessage()}", $e->getCode(), $e);
         }
@@ -280,7 +280,7 @@ class ProductClient
                 'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
-            return ProductVariantDTO::fromArray($data);
+            return ProductVariantDTO::fromArray($data['data']);
         } catch (\Exception $e) {
             throw new ProductException("Failed to update product variant: {$e->getMessage()}", $e->getCode(), $e);
         }
