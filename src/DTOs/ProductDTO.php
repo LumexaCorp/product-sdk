@@ -13,6 +13,7 @@ class ProductDTO
         public readonly string $id,
         public readonly string $name,
         public readonly string $description,
+        public readonly float $price,
         public readonly array $variants,
         public readonly string $created_at,
         public readonly string $updated_at,
@@ -30,6 +31,7 @@ class ProductDTO
             id: (string) $data['id'],
             name: (string) $data['name'],
             description: (string) $data['description'],
+            price: (float) $data['price'],
             variants: array_map(
                 fn (array $variant) => ProductVariantDTO::fromArray($variant),
                 $data['variants'] ?? []
@@ -50,6 +52,7 @@ class ProductDTO
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'price' => $this->price,
             'variants' => array_map(
                 fn (ProductVariantDTO $variant) => $variant->toArray(),
                 $this->variants

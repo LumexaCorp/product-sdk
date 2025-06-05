@@ -11,7 +11,6 @@ class ProductVariantDTO
      */
     public function __construct(
         public readonly string $id,
-        public readonly float $price,
         public readonly string $sku,
         public readonly int $stock,
         public readonly array $attributes,
@@ -29,7 +28,6 @@ class ProductVariantDTO
     {
         return new self(
             id: (string) $data['id'],
-            price: (float) $data['price'],
             sku: (string) $data['sku'],
             stock: (int) $data['stock'],
             attributes: (array) $data['attributes'],
@@ -47,7 +45,6 @@ class ProductVariantDTO
     {
         return [
             'id' => $this->id,
-            'price' => $this->price,
             'sku' => $this->sku,
             'stock' => $this->stock,
             'attributes' => $this->attributes,

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Lumexa\ProductSdk;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use Lumexa\ProductSdk\DTOs\ProductDTO;
 use Lumexa\ProductSdk\DTOs\ProductTypeDTO;
 use Lumexa\ProductSdk\DTOs\ProductVariantDTO;
 use Lumexa\ProductSdk\Exceptions\ProductException;
+use Lumexa\ProductSdk\Exceptions\ValidationException;
 
 class ProductClient
 {
@@ -30,10 +32,39 @@ class ProductClient
     }
 
     /**
+     * Handle API errors and transform them into appropriate exceptions
+     *
+     * @throws ValidationException|ProductException
+     */
+    private function handleApiError(\Throwable $e): never
+    {
+        if ($e instanceof ClientException) {
+            $response = $e->getResponse();
+            $statusCode = $response->getStatusCode();
+            $body = json_decode((string) $response->getBody(), true);
+
+            if ($statusCode === 422 && isset($body['errors'])) {
+                throw new ValidationException(
+                    $body['message'] ?? 'Validation failed',
+                    $body['errors'],
+                    $statusCode,
+                    $e
+                );
+            }
+
+            if (isset($body['message'])) {
+                throw new ProductException($body['message'], $statusCode, $e);
+            }
+        }
+
+        throw new ProductException($e->getMessage(), (int) $e->getCode(), $e);
+    }
+
+    /**
      * Get all products
      *
      * @return array<ProductDTO>
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function getAllProducts(): array
     {
@@ -41,15 +72,15 @@ class ProductClient
             $response = $this->httpClient->get('/api/products');
             $data = json_decode((string) $response->getBody(), true);
             return array_map(fn (array $product) => ProductDTO::fromArray($product), $data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to get products: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
     /**
      * Get a product by ID
      *
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function getProductById(string $id): ProductDTO
     {
@@ -57,8 +88,8 @@ class ProductClient
             $response = $this->httpClient->get("/api/products/{$id}");
             $data = json_decode((string) $response->getBody(), true);
             return ProductDTO::fromArray($data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to get product: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
@@ -67,9 +98,10 @@ class ProductClient
      *
      * @param array{
      *     name: string,
-     *     description: string
+     *     description: string,
+     *     price: float
      * } $data
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function createProduct(array $data): ProductDTO
     {
@@ -79,8 +111,8 @@ class ProductClient
             ]);
             $data = json_decode((string) $response->getBody(), true);
             return ProductDTO::fromArray($data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to create product: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
@@ -89,9 +121,10 @@ class ProductClient
      *
      * @param array{
      *     name?: string,
-     *     description?: string
+     *     description?: string,
+     *     price?: float
      * } $data
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function updateProduct(string $id, array $data): ProductDTO
     {
@@ -101,22 +134,22 @@ class ProductClient
             ]);
             $data = json_decode((string) $response->getBody(), true);
             return ProductDTO::fromArray($data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to update product: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
     /**
      * Delete a product
      *
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function deleteProduct(string $id): void
     {
         try {
             $this->httpClient->delete("/api/products/{$id}");
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to delete product: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
@@ -124,7 +157,7 @@ class ProductClient
      * Get all product types
      *
      * @return array<ProductTypeDTO>
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function getAllProductTypes(): array
     {
@@ -132,15 +165,15 @@ class ProductClient
             $response = $this->httpClient->get('/api/product-types');
             $data = json_decode((string) $response->getBody(), true);
             return array_map(fn (array $type) => ProductTypeDTO::fromArray($type), $data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to get product types: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
     /**
      * Get a product type by ID
      *
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function getProductTypeById(string $id): ProductTypeDTO
     {
@@ -148,8 +181,8 @@ class ProductClient
             $response = $this->httpClient->get("/api/product-types/{$id}");
             $data = json_decode((string) $response->getBody(), true);
             return ProductTypeDTO::fromArray($data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to get product type: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
@@ -157,7 +190,7 @@ class ProductClient
      * Create a new product type
      *
      * @param array{name: string} $data
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function createProductType(array $data): ProductTypeDTO
     {
@@ -167,8 +200,8 @@ class ProductClient
             ]);
             $data = json_decode((string) $response->getBody(), true);
             return ProductTypeDTO::fromArray($data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to create product type: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
@@ -176,7 +209,7 @@ class ProductClient
      * Update a product type
      *
      * @param array{name?: string} $data
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function updateProductType(string $id, array $data): ProductTypeDTO
     {
@@ -186,22 +219,22 @@ class ProductClient
             ]);
             $data = json_decode((string) $response->getBody(), true);
             return ProductTypeDTO::fromArray($data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to update product type: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
     /**
      * Delete a product type
      *
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function deleteProductType(string $id): void
     {
         try {
             $this->httpClient->delete("/api/product-types/{$id}");
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to delete product type: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
@@ -209,7 +242,7 @@ class ProductClient
      * Get all variants for a product
      *
      * @return array<ProductVariantDTO>
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function getProductVariants(string $productId): array
     {
@@ -217,15 +250,15 @@ class ProductClient
             $response = $this->httpClient->get("/api/products/{$productId}/variants");
             $data = json_decode((string) $response->getBody(), true);
             return array_map(fn (array $variant) => ProductVariantDTO::fromArray($variant), $data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to get product variants: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
     /**
      * Get a specific variant for a product
      *
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function getProductVariant(string $productId, string $variantId): ProductVariantDTO
     {
@@ -233,8 +266,8 @@ class ProductClient
             $response = $this->httpClient->get("/api/products/{$productId}/variants/{$variantId}");
             $data = json_decode((string) $response->getBody(), true);
             return ProductVariantDTO::fromArray($data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to get product variant: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
@@ -242,12 +275,11 @@ class ProductClient
      * Create a new variant for a product
      *
      * @param array{
-     *     price: float,
      *     sku: string,
      *     stock: int,
      *     attributes: array<string, mixed>
      * } $data
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function createProductVariant(string $productId, array $data): ProductVariantDTO
     {
@@ -257,8 +289,8 @@ class ProductClient
             ]);
             $data = json_decode((string) $response->getBody(), true);
             return ProductVariantDTO::fromArray($data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to create product variant: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
@@ -266,12 +298,11 @@ class ProductClient
      * Update a variant for a product
      *
      * @param array{
-     *     price?: float,
      *     sku?: string,
      *     stock?: int,
      *     attributes?: array<string, mixed>
      * } $data
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function updateProductVariant(string $productId, string $variantId, array $data): ProductVariantDTO
     {
@@ -281,22 +312,22 @@ class ProductClient
             ]);
             $data = json_decode((string) $response->getBody(), true);
             return ProductVariantDTO::fromArray($data['data']);
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to update product variant: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 
     /**
      * Delete a variant from a product
      *
-     * @throws ProductException
+     * @throws ProductException|ValidationException
      */
     public function deleteProductVariant(string $productId, string $variantId): void
     {
         try {
             $this->httpClient->delete("/api/products/{$productId}/variants/{$variantId}");
-        } catch (\Exception $e) {
-            throw new ProductException("Failed to delete product variant: {$e->getMessage()}", $e->getCode(), $e);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
         }
     }
 }
