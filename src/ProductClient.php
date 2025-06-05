@@ -129,7 +129,7 @@ class ProductClient
     public function updateProduct(string $id, array $data): ProductDTO
     {
         try {
-            $response = $this->httpClient->patch("/api/products/{$id}", [
+            $response = $this->httpClient->put("/api/products/{$id}", [
                 'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
@@ -214,7 +214,7 @@ class ProductClient
     public function updateProductType(string $id, array $data): ProductTypeDTO
     {
         try {
-            $response = $this->httpClient->patch("/api/product-types/{$id}", [
+            $response = $this->httpClient->put("/api/product-types/{$id}", [
                 'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
@@ -244,7 +244,7 @@ class ProductClient
      * @return array<ProductVariantDTO>
      * @throws ProductException|ValidationException
      */
-    public function getProductVariants(string $productId): array
+    public function getProductVariants(int $productId): array
     {
         try {
             $response = $this->httpClient->get("/api/products/{$productId}/variants");
@@ -307,7 +307,7 @@ class ProductClient
     public function updateProductVariant(string $productId, string $variantId, array $data): ProductVariantDTO
     {
         try {
-            $response = $this->httpClient->patch("/api/products/{$productId}/variants/{$variantId}", [
+            $response = $this->httpClient->put("/api/products/{$productId}/variants/{$variantId}", [
                 'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
