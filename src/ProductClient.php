@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Lumexa\ProductSdk;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
+use Illuminate\Support\Facades\Log;
 use Lumexa\ProductSdk\DTOs\ProductDTO;
+use GuzzleHttp\Exception\ClientException;
 use Lumexa\ProductSdk\DTOs\ProductTypeDTO;
+use Lumexa\ProductSdk\DTOs\ProductImageDTO;
 use Lumexa\ProductSdk\DTOs\ProductVariantDTO;
 use Lumexa\ProductSdk\Exceptions\ProductException;
 use Lumexa\ProductSdk\Exceptions\ValidationException;
@@ -70,6 +72,39 @@ class ProductClient
     {
         try {
             $response = $this->httpClient->get('/api/products');
+            $data = json_decode((string) $response->getBody(), true);
+            return array_map(fn (array $product) => ProductDTO::fromArray($product), $data['data']);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
+        }
+    }
+
+    public function getProductAvailable(): array
+    {
+        try {
+            $response = $this->httpClient->get("/api/products?is_active=1");
+            $data = json_decode((string) $response->getBody(), true);
+            return array_map(fn (array $product) => ProductDTO::fromArray($product), $data['data']);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
+        }
+    }
+
+    public function getProductBySlug(string $slug): ProductDTO
+    {
+        try {
+            $response = $this->httpClient->get("/api/products/slug/{$slug}");
+            $data = json_decode((string) $response->getBody(), true);
+            return ProductDTO::fromArray($data['data']);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
+        }
+    }
+
+    public function getProductsFuture(): array
+    {
+        try {
+            $response = $this->httpClient->get("/api/products/future");
             $data = json_decode((string) $response->getBody(), true);
             return array_map(fn (array $product) => ProductDTO::fromArray($product), $data['data']);
         } catch (\Throwable $e) {
@@ -329,5 +364,55 @@ class ProductClient
         } catch (\Throwable $e) {
             $this->handleApiError($e);
         }
+    }
+
+    public function createProductImage(string $productId, array $data): ProductImageDTO
+    {
+        try {
+            $response = $this->httpClient->post("/api/products/{$productId}/images", [
+                'multipart' => $this->buildMultipartPayload($data),
+            ]);
+            $data = json_decode((string) $response->getBody(), true);
+            return ProductImageDTO::fromArray($data['data']);
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
+        }
+    }
+
+    public function deleteProductImage(string $productId, string $imageId): void
+    {
+        try {
+            $this->httpClient->delete("/api/products/{$productId}/images/{$imageId}");
+        } catch (\Throwable $e) {
+            $this->handleApiError($e);
+        }
+    }
+
+    private function buildMultipartPayload(array $data): array
+    {
+        $payload = [];
+
+        foreach ($data as $key => $value) {
+            if ($key === 'images') {
+                foreach ($value as $index => $image) {
+                    $payload[] = [
+                        'name' => "images[$index][order]",
+                        'contents' => $image['order'],
+                    ];
+                    $payload[] = [
+                        'name' => "images[$index][file]",
+                        'contents' => fopen($image['file']->getPathname(), 'r'),
+                        'filename' => $image['file']->getClientOriginalName(),
+                    ];
+                }
+            } else {
+                $payload[] = [
+                    'name' => $key,
+                    'contents' => $value ?? '',
+                ];
+            }
+        }
+
+        return $payload;
     }
 }

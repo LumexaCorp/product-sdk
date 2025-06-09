@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Lumexa\ProductSdk\DTOs;
 
+use Lumexa\ProductSdk\DTOs\ImageDTO;
+
 class ProductDTO
 {
     /**
@@ -15,6 +17,9 @@ class ProductDTO
         public readonly string $description,
         public readonly float $price,
         public readonly array $variants,
+        public readonly array $images,
+        public readonly bool $isActive,
+        public readonly string $availableAt,
         public readonly string $created_at,
         public readonly string $updated_at,
     ) {
@@ -32,6 +37,12 @@ class ProductDTO
             name: (string) $data['name'],
             description: (string) $data['description'],
             price: (float) $data['price'],
+            images: array_map(
+                fn (array $image) => ProductImageDTO::fromArray($image),
+                $data['images'] ?? []
+            ),
+            isActive: (bool) $data['is_active'],
+            availableAt: (string) $data['available_at'],
             variants: array_map(
                 fn (array $variant) => ProductVariantDTO::fromArray($variant),
                 $data['variants'] ?? []
@@ -53,6 +64,12 @@ class ProductDTO
             'name' => $this->name,
             'description' => $this->description,
             'price' => $this->price,
+            'images' => array_map(
+                fn (ProductImageDTO $image) => $image->toArray(),
+                $this->images
+            ),
+            'is_active' => $this->isActive,
+            'available_at' => $this->availableAt,
             'variants' => array_map(
                 fn (ProductVariantDTO $variant) => $variant->toArray(),
                 $this->variants
