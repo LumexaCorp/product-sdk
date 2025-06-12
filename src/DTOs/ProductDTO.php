@@ -17,6 +17,7 @@ class ProductDTO
         public readonly string $description,
         public readonly float $price,
         public readonly array $variants,
+        public readonly string $slug,
         public readonly array $images,
         public readonly bool $isActive,
         public readonly string $availableAt,
@@ -35,7 +36,9 @@ class ProductDTO
         return new self(
             id: (string) $data['id'],
             name: (string) $data['name'],
+            slug: (string) $data['slug'],
             description: (string) $data['description'],
+
             price: (float) $data['price'],
             images: array_map(
                 fn (array $image) => ProductImageDTO::fromArray($image),
@@ -64,6 +67,7 @@ class ProductDTO
             'name' => $this->name,
             'description' => $this->description,
             'price' => $this->price,
+            'slug' => $this->slug,
             'images' => array_map(
                 fn (ProductImageDTO $image) => $image->toArray(),
                 $this->images
