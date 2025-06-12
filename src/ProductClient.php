@@ -370,7 +370,7 @@ class ProductClient
     {
         try {
             $response = $this->httpClient->post("/api/products/{$productId}/images", [
-                'multipart' => $this->buildMultipartPayload($data),
+                'json' => $data,
             ]);
             $data = json_decode((string) $response->getBody(), true);
             return ProductImageDTO::fromArray($data['data']);
@@ -386,33 +386,5 @@ class ProductClient
         } catch (\Throwable $e) {
             $this->handleApiError($e);
         }
-    }
-
-    private function buildMultipartPayload(array $data): array
-    {
-        $payload = [];
-
-        foreach ($data as $key => $value) {
-            if ($key === 'images') {
-                foreach ($value as $index => $image) {
-                    $payload[] = [
-                        'name' => "images[$index][order]",
-                        'contents' => $image['order'],
-                    ];
-                    $payload[] = [
-                        'name' => "images[$index][file]",
-                        'contents' => fopen($image['file']->getPathname(), 'r'),
-                        'filename' => $image['file']->getClientOriginalName(),
-                    ];
-                }
-            } else {
-                $payload[] = [
-                    'name' => $key,
-                    'contents' => $value ?? '',
-                ];
-            }
-        }
-
-        return $payload;
     }
 }
