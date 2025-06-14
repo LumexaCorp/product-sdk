@@ -14,12 +14,13 @@ class ProductDTO
     public function __construct(
         public readonly string $id,
         public readonly string $name,
-        public readonly string $description,
+        public readonly ?string $description,
         public readonly float $price,
         public readonly array $variants,
         public readonly string $slug,
         public readonly array $images,
         public readonly bool $isActive,
+        public readonly ProductTypeDTO $product_type,
         public readonly string $availableAt,
         public readonly string $created_at,
         public readonly string $updated_at,
@@ -38,12 +39,13 @@ class ProductDTO
             name: (string) $data['name'],
             slug: (string) $data['slug'],
             description: (string) $data['description'],
-
+            product_type: ProductTypeDTO::fromArray($data['product_type']),
             price: (float) $data['price'],
             images: array_map(
                 fn (array $image) => ProductImageDTO::fromArray($image),
                 $data['images'] ?? []
             ),
+
             isActive: (bool) $data['is_active'],
             availableAt: (string) $data['available_at'],
             variants: array_map(
@@ -68,6 +70,7 @@ class ProductDTO
             'description' => $this->description,
             'price' => $this->price,
             'slug' => $this->slug,
+            'product_type' => $this->product_type->toArray(),
             'images' => array_map(
                 fn (ProductImageDTO $image) => $image->toArray(),
                 $this->images
