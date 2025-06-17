@@ -16,11 +16,11 @@ class ProductDTO
         public readonly string $name,
         public readonly ?string $description,
         public readonly float $price,
-        public readonly array $variants,
+        public readonly ?array $variants,
         public readonly string $slug,
-        public readonly array $images,
+        public readonly ?array $images,
         public readonly bool $isActive,
-        public readonly ProductTypeDTO $product_type,
+        public readonly ?ProductTypeDTO $product_type,
         public readonly string $availableAt,
         public readonly string $created_at,
         public readonly string $updated_at,
@@ -39,19 +39,19 @@ class ProductDTO
             name: (string) $data['name'],
             slug: (string) $data['slug'],
             description: (string) $data['description'],
-            product_type: ProductTypeDTO::fromArray($data['product_type']),
+            product_type: $data['product_type'] ? ProductTypeDTO::fromArray($data['product_type']) : null,
             price: (float) $data['price'],
-            images: array_map(
+            images: isset($data['images']) ? array_map(
                 fn (array $image) => ProductImageDTO::fromArray($image),
-                $data['images'] ?? []
-            ),
+                $data['images']
+            ) : null,
 
             isActive: (bool) $data['is_active'],
             availableAt: (string) $data['available_at'],
-            variants: array_map(
+            variants: isset($data['variants']) ? array_map(
                 fn (array $variant) => ProductVariantDTO::fromArray($variant),
-                $data['variants'] ?? []
-            ),
+                $data['variants']
+            ) : null,
             created_at: (string) $data['created_at'],
             updated_at: (string) $data['updated_at'],
         );
@@ -70,17 +70,17 @@ class ProductDTO
             'description' => $this->description,
             'price' => $this->price,
             'slug' => $this->slug,
-            'product_type' => $this->product_type->toArray(),
-            'images' => array_map(
+            'product_type' => $this->product_type ? $this->product_type->toArray() : null,
+            'images' => $this->images ? array_map(
                 fn (ProductImageDTO $image) => $image->toArray(),
                 $this->images
-            ),
+            ) : null,
             'is_active' => $this->isActive,
             'available_at' => $this->availableAt,
-            'variants' => array_map(
+            'variants' => $this->variants ? array_map(
                 fn (ProductVariantDTO $variant) => $variant->toArray(),
                 $this->variants
-            ),
+            ) : null,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

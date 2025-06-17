@@ -122,6 +122,7 @@ class ProductClient
         try {
             $response = $this->httpClient->get("/api/products/{$id}");
             $data = json_decode((string) $response->getBody(), true);
+
             return ProductDTO::fromArray($data['data']);
         } catch (\Throwable $e) {
             $this->handleApiError($e);
