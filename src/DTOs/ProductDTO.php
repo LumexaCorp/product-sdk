@@ -19,7 +19,7 @@ class ProductDTO
         public readonly ?array $variants,
         public readonly string $slug,
         public readonly ?array $images,
-        public readonly bool $isActive,
+        public readonly bool $is_active,
         public readonly ?ProductTypeDTO $product_type,
         public readonly string $availableAt,
         public readonly string $created_at,
@@ -39,16 +39,15 @@ class ProductDTO
             name: (string) $data['name'],
             slug: (string) $data['slug'],
             description: (string) $data['description'],
-            product_type: $data['product_type'] ? ProductTypeDTO::fromArray($data['product_type']) : null,
+            product_type: (array_key_exists('product_type', $data) && is_array($data['product_type'])) ? ProductTypeDTO::fromArray($data['product_type']) : null,
             price: (float) $data['price'],
-            images: isset($data['images']) ? array_map(
+            images: (array_key_exists('images', $data) && is_array($data['images'])) ? array_map(
                 fn (array $image) => ProductImageDTO::fromArray($image),
                 $data['images']
             ) : null,
-
-            isActive: (bool) $data['is_active'],
+            is_active: (bool) $data['is_active'],
             availableAt: (string) $data['available_at'],
-            variants: isset($data['variants']) ? array_map(
+            variants: (array_key_exists('variants', $data) && is_array($data['variants'])) ? array_map(
                 fn (array $variant) => ProductVariantDTO::fromArray($variant),
                 $data['variants']
             ) : null,
@@ -75,7 +74,7 @@ class ProductDTO
                 fn (ProductImageDTO $image) => $image->toArray(),
                 $this->images
             ) : null,
-            'is_active' => $this->isActive,
+            'is_active' => $this->is_active,
             'available_at' => $this->availableAt,
             'variants' => $this->variants ? array_map(
                 fn (ProductVariantDTO $variant) => $variant->toArray(),
